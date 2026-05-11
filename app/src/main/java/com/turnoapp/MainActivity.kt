@@ -1,4 +1,4 @@
-package com.phylos.turnoapp
+package com.turnoapp
 
 import android.Manifest
 import android.app.Activity

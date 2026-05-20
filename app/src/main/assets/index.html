@@ -245,6 +245,48 @@ header{position:sticky;top:0;z-index:30;width:100%;padding:14px 20px;display:fle
 .user-avatar{width:42px;height:42px;background:var(--surface2);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Space Mono',monospace;font-weight:700;color:var(--accent);font-size:16px;flex-shrink:0;}
 .user-card-name{font-size:15px;font-weight:600;}
 .user-card-info{font-size:11px;color:var(--muted);margin-top:2px;}
+
+/* ── HOURS PAGE ── */
+.hours-config-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:18px 16px;display:flex;flex-direction:column;gap:12px;}
+.hours-config-title{font-family:'Space Mono',monospace;font-size:13px;color:var(--accent);font-weight:700;}
+.hours-config-row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+.hours-config-label{font-size:13px;color:var(--muted);}
+.hours-config-input-wrap{display:flex;align-items:center;gap:8px;}
+.hours-field{background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:8px 12px;color:var(--text);font-family:'Space Mono',monospace;font-size:14px;font-weight:700;width:80px;outline:none;text-align:center;transition:border-color .2s;}
+.hours-field:focus{border-color:var(--accent);}
+.hours-config-unit{font-size:12px;color:var(--muted);}
+.hours-week-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;}
+.hours-week-header{padding:14px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;}
+.hours-week-title{font-family:'Space Mono',monospace;font-size:11px;color:var(--accent);font-weight:700;letter-spacing:1px;}
+.hours-day-row{display:flex;align-items:center;padding:10px 16px;border-bottom:1px solid var(--border);gap:10px;}
+.hours-day-row:last-child{border-bottom:none;}
+.hours-day-name{font-family:'Space Mono',monospace;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;width:28px;flex-shrink:0;}
+.hours-day-shift{font-size:12px;color:var(--muted);flex:1;}
+.hours-day-val{font-family:'Space Mono',monospace;font-size:12px;font-weight:700;text-align:right;flex-shrink:0;}
+.hours-day-val.complementary{color:var(--accent);}
+.hours-day-val.zero{color:var(--muted);}
+.hours-day-val.deducted{color:var(--ec);}
+.hours-summary-row{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-top:1px solid var(--border);background:var(--surface2);}
+.hours-summary-label{font-size:13px;color:var(--muted);}
+.hours-summary-val{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;}
+.hours-summary-val.positive{color:var(--accent);}
+.hours-summary-val.negative{color:var(--midday);}
+.hours-summary-val.neutral{color:var(--muted);}
+.hours-month-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.hours-stat-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px;text-align:center;}
+.hours-stat-num{font-family:'Space Mono',monospace;font-size:24px;font-weight:700;}
+.hours-stat-label{font-size:11px;color:var(--muted);margin-top:4px;}
+.hours-stat-num.positive{color:var(--accent);}
+.hours-stat-num.negative{color:var(--midday);}
+.hours-stat-num.neutral{color:var(--text);}
+.hours-historic-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:10px;}
+.hours-historic-row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);}
+.hours-historic-row:last-child{border-bottom:none;}
+.hours-historic-label{font-size:13px;color:var(--muted);}
+.hours-historic-val{font-family:'Space Mono',monospace;font-size:14px;font-weight:700;}
+.break-selector{display:flex;gap:6px;align-items:center;}
+.break-btn{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:4px 10px;color:var(--muted);font-size:11px;cursor:pointer;transition:all .15s;font-family:'Space Mono',monospace;}
+.break-btn.active{border-color:var(--accent);color:var(--accent);background:#1a1f10;}
 </style>
 </head>
 <body>
@@ -262,6 +304,7 @@ header{position:sticky;top:0;z-index:30;width:100%;padding:14px 20px;display:fle
     <div class="sidebar-item active" data-page="home" onclick="navTo('home')"><span class="icon">🏠</span>Inicio</div>
     <div class="sidebar-item" data-page="add" onclick="navTo('add')"><span class="icon">➕</span>Añadir Horarios</div>
     <div class="sidebar-item" data-page="saved" onclick="navTo('saved')"><span class="icon">📋</span>Horarios Guardados</div>
+    <div class="sidebar-item" data-page="hours" onclick="navTo('hours')"><span class="icon">📊</span>Mis Horas</div>
   </div>
   <div class="sidebar-user" id="sidebarUser" style="display:none;">
     <div class="sidebar-avatar" id="sidebarAvatar"></div>
@@ -501,6 +544,7 @@ function navTo(page){
   if(page==='home') renderHome();
   if(page==='add') renderAddPage();
   if(page==='saved') renderSavedPage();
+  if(page==='hours') renderHoursPage();
 }
 
 document.getElementById('menuBtn').addEventListener('click',()=>{document.getElementById('sidebar').classList.add('open');document.getElementById('overlay').classList.add('show');});
@@ -759,7 +803,7 @@ Reglas:
 - Celdas vacías→""
 - Mantén: L, LIB, VAC, HS, EC`;
   try{
-    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+    const res=await fetch('https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent',
       {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':apiKey},
        body:JSON.stringify({contents:[{parts:[{inline_data:{mime_type:'image/jpeg',data:base64Image}},{text:prompt}]}],generationConfig:{temperature:0.1}})});
     const data=await res.json();
@@ -982,7 +1026,281 @@ function showLoading(s){document.getElementById('loading').style.display=s?'flex
 function showError(m){const e=document.getElementById('errorBox');e.textContent=m;e.style.display='block';}
 function hideError(){document.getElementById('errorBox').style.display='none';}
 
+
+// ── HOURS PAGE ──
+function renderHoursPage(){
+  if(!currentUser){init();return;}
+
+  // Load contract hours
+  const allContracts = JSON.parse(localStorage.getItem('user_contracts')||'{}');
+  const contractH = allContracts[currentUser] || 0;
+  document.getElementById('contractHours').value = contractH || '';
+
+  // Break preferences per week: stored as {weekRange: {dayIndex: 0|0.5|1}}
+  const breakPrefs = JSON.parse(localStorage.getItem('break_prefs')||'{}');
+
+  renderHoursWeekSelector();
+  renderHoursMonthSummary(contractH, breakPrefs);
+  renderHoursHistoric(contractH, breakPrefs);
+}
+
+document.getElementById('saveContractBtn').addEventListener('click',()=>{
+  const h = parseFloat(document.getElementById('contractHours').value);
+  if(!h||h<=0){showToast('Introduce tus horas de contrato','error');return;}
+  const all = JSON.parse(localStorage.getItem('user_contracts')||'{}');
+  all[currentUser] = h;
+  localStorage.setItem('user_contracts', JSON.stringify(all));
+  showToast(`✅ Contrato guardado: ${h}h/semana`);
+  renderHoursPage();
+});
+
+function renderHoursWeekSelector(){
+  const sel = document.getElementById('hoursWeekSelector'); sel.innerHTML='';
+  const saved = getSaved()[currentUser]||[];
+  if(!saved.length){
+    sel.innerHTML='<option>Sin semanas guardadas</option>';
+    document.getElementById('hoursWeekBreakdown').innerHTML='<div style="color:var(--muted);font-size:13px;text-align:center;padding:20px;">Añade semanas desde ➕ Añadir Horarios</div>';
+    return;
+  }
+  // Sort weeks by date descending
+  const sorted = [...saved].sort((a,b)=>b.dates[0].split('/').reverse().join('')>a.dates[0].split('/').reverse().join('')?1:-1);
+  sorted.forEach((week,i)=>{
+    const opt = document.createElement('option');
+    opt.value = week.weekRange;
+    opt.textContent = `${week.dates[0].slice(0,5)} – ${week.dates[6].slice(0,5)}`;
+    if(i===0) opt.selected=true;
+    sel.appendChild(opt);
+  });
+  renderHoursWeekBreakdown(sorted[0]);
+  sel.addEventListener('change', function(){
+    const week = saved.find(w=>w.weekRange===this.value);
+    if(week) renderHoursWeekBreakdown(week);
+  });
+}
+
+function parseShiftHours(shift){
+  if(!shift) return 0;
+  const m = shift.match(/(\d{1,2}):(\d{2})-(\d{1,2}):(\d{2})/);
+  if(!m) return 0;
+  let [,sh,sm,eh,em] = m;
+  let start = parseInt(sh)*60 + parseInt(sm);
+  let end   = parseInt(eh)*60 + parseInt(em);
+  if(end<=start) end += 24*60; // overnight
+  return (end - start) / 60;
+}
+
+function getBreakDeduction(totalH, breakPref){
+  // breakPref: null=auto, 0=none, 0.5=30min, 1=1h
+  if(breakPref !== null && breakPref !== undefined) return breakPref;
+  if(totalH >= 6) return 0.5; // auto: 30 min for >=6h
+  return 0;
+}
+
+function renderHoursWeekBreakdown(week){
+  const allContracts = JSON.parse(localStorage.getItem('user_contracts')||'{}');
+  const contractH = allContracts[currentUser] || 0;
+  const breakPrefs = JSON.parse(localStorage.getItem('break_prefs')||'{}');
+  const weekBreaks = breakPrefs[week.weekRange] || {};
+
+  // Count working days (not LIB/L) and special days (VAC/EC/HS)
+  let workDays = 0, specialDays = 0;
+  week.shifts.forEach(s=>{
+    const t = classifyShift(s);
+    if(t==='lib'||s===''||!s) { /* libre = 0h, no cuenta */ }
+    else if(t==='vac'||t==='ec'||t==='hs') specialDays++;
+    else workDays++;
+  });
+
+  const totalScheduledDays = workDays + specialDays;
+  const hPerDay = totalScheduledDays > 0 ? contractH / totalScheduledDays : 0;
+  const adjustedContract = contractH - (specialDays * hPerDay);
+
+  let totalWorked = 0;
+  const rows = [];
+
+  week.dates.forEach((date,i)=>{
+    const shift = week.shifts[i]||'';
+    const type  = classifyShift(shift);
+    const dayName = DAYS_ES[new Date(...date.split('/').reverse().map((v,j)=>j===1?parseInt(v)-1:parseInt(v))).getDay()];
+    const rawH  = parseShiftHours(shift);
+
+    if(type==='lib'||!shift){
+      rows.push({dayName, date, shift:'LIB', rawH:0, breakH:0, netH:0, type:'lib', i});
+      return;
+    }
+    if(type==='vac'||type==='ec'||type==='hs'){
+      rows.push({dayName, date, shift, rawH:0, breakH:0, netH:0, type, i, isSpecial:true});
+      return;
+    }
+
+    // Determine break
+    let breakH = 0;
+    const pref = weekBreaks[i];
+    if(rawH >= 9){
+      // Stored pref or default 0.5
+      breakH = (pref !== undefined && pref !== null) ? pref : 0.5;
+    } else if(rawH >= 6){
+      breakH = 0.5;
+    }
+    const netH = Math.max(0, rawH - breakH);
+    totalWorked += netH;
+    rows.push({dayName, date, shift, rawH, breakH, netH, type, i, isLong: rawH>=9});
+  });
+
+  const complementH = totalWorked - adjustedContract;
+
+  // Render
+  let html = `<div class="hours-week-card">
+    <div class="hours-week-header">
+      <div class="hours-week-title">${week.dates[0].slice(0,5)} – ${week.dates[6].slice(0,5)}</div>
+      ${contractH>0?`<div style="font-size:11px;color:var(--muted);">Contrato ajustado: ${adjustedContract.toFixed(1)}h</div>`:''}
+    </div>`;
+
+  rows.forEach(r=>{
+    const valCls = r.netH===0?'zero':r.netH>hPerDay?'complementary':'neutral';
+    let breakSelector='';
+    if(r.isLong){
+      const p = weekBreaks[r.i];
+      const sel30 = (p===0.5||p===undefined)?'active':'';
+      const sel60 = p===1?'active':'';
+      breakSelector=`<div class="break-selector">
+        <span style="font-size:10px;color:var(--muted);">Descanso:</span>
+        <button class="break-btn ${sel30}" data-week="${week.weekRange}" data-day="${r.i}" data-val="0.5">30min</button>
+        <button class="break-btn ${sel60}" data-week="${week.weekRange}" data-day="${r.i}" data-val="1">1h</button>
+      </div>`;
+    }
+    html+=`<div class="hours-day-row" style="flex-wrap:wrap;gap:6px;">
+      <div class="hours-day-name">${r.dayName}</div>
+      <div class="hours-day-shift">${r.shift||'—'}${r.breakH>0?` <span style="font-size:10px;color:var(--muted);">(-${r.breakH*60}min)</span>`:''}</div>
+      <div class="hours-day-val ${valCls}">${r.netH>0?r.netH.toFixed(1)+'h':'—'}</div>
+      ${breakSelector?`<div style="width:100%;padding-left:38px;">${breakSelector}</div>`:''}
+    </div>`;
+  });
+
+  const compCls = complementH>0?'positive':complementH<0?'negative':'neutral';
+  html+=`<div class="hours-summary-row">
+    <span class="hours-summary-label">Total trabajado</span>
+    <span class="hours-summary-val neutral">${totalWorked.toFixed(1)}h</span>
+  </div>
+  <div class="hours-summary-row">
+    <span class="hours-summary-label">Horas complementarias</span>
+    <span class="hours-summary-val ${compCls}">${complementH>=0?'+':''}${complementH.toFixed(1)}h</span>
+  </div></div>`;
+
+  document.getElementById('hoursWeekBreakdown').innerHTML=html;
+
+  // Attach break button listeners
+  document.querySelectorAll('.break-btn').forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      const weekRange=btn.dataset.week, day=parseInt(btn.dataset.day), val=parseFloat(btn.dataset.val);
+      const bp=JSON.parse(localStorage.getItem('break_prefs')||'{}');
+      if(!bp[weekRange]) bp[weekRange]={};
+      bp[weekRange][day]=val;
+      localStorage.setItem('break_prefs',JSON.stringify(bp));
+      const week=getSaved()[currentUser].find(w=>w.weekRange===weekRange);
+      if(week) renderHoursWeekBreakdown(week);
+    });
+  });
+}
+
+function calcWeekStats(week, contractH, breakPrefs){
+  const weekBreaks = (breakPrefs||{})[week.weekRange]||{};
+  let workDays=0, specialDays=0;
+  week.shifts.forEach(s=>{
+    const t=classifyShift(s);
+    if(t==='lib'||!s) {}
+    else if(t==='vac'||t==='ec'||t==='hs') specialDays++;
+    else workDays++;
+  });
+  const totalScheduledDays=workDays+specialDays;
+  const hPerDay=totalScheduledDays>0?contractH/totalScheduledDays:0;
+  const adjustedContract=contractH-(specialDays*hPerDay);
+  let totalWorked=0;
+  week.shifts.forEach((s,i)=>{
+    const t=classifyShift(s);
+    if(t==='lib'||!s||t==='vac'||t==='ec'||t==='hs') return;
+    const rawH=parseShiftHours(s);
+    let breakH=0;
+    const pref=weekBreaks[i];
+    if(rawH>=9) breakH=(pref!==undefined&&pref!==null)?pref:0.5;
+    else if(rawH>=6) breakH=0.5;
+    totalWorked+=Math.max(0,rawH-breakH);
+  });
+  return {totalWorked, adjustedContract, complementH: totalWorked-adjustedContract};
+}
+
+function renderHoursMonthSummary(contractH, breakPrefs){
+  if(!contractH){document.getElementById('hoursMonthSummary').innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px;">Configura tus horas de contrato arriba</div>';return;}
+  const today=new Date();const m=today.getMonth(),y=today.getFullYear();
+  const saved=getSaved()[currentUser]||[];
+  const weeks=saved.filter(w=>{const[,mo,yr]=w.dates[0].split('/');return parseInt(yr)===y&&parseInt(mo)-1===m;});
+  if(!weeks.length){document.getElementById('hoursMonthSummary').innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px;">Sin semanas guardadas este mes</div>';return;}
+  let totalWorked=0,totalContract=0,totalComp=0;
+  weeks.forEach(w=>{const s=calcWeekStats(w,contractH,breakPrefs);totalWorked+=s.totalWorked;totalContract+=s.adjustedContract;totalComp+=s.complementH;});
+  const compCls=totalComp>0?'positive':totalComp<0?'negative':'neutral';
+  document.getElementById('hoursMonthSummary').innerHTML=`<div class="hours-month-grid">
+    <div class="hours-stat-card"><div class="hours-stat-num neutral">${totalWorked.toFixed(1)}h</div><div class="hours-stat-label">Trabajadas</div></div>
+    <div class="hours-stat-card"><div class="hours-stat-num neutral">${totalContract.toFixed(1)}h</div><div class="hours-stat-label">Contrato</div></div>
+    <div class="hours-stat-card" style="grid-column:span 2;"><div class="hours-stat-num ${compCls}">${totalComp>=0?'+':''}${totalComp.toFixed(1)}h</div><div class="hours-stat-label">Horas complementarias este mes</div></div>
+  </div>`;
+}
+
+function renderHoursHistoric(contractH, breakPrefs){
+  if(!contractH){document.getElementById('hoursHistoric').innerHTML='';return;}
+  const saved=getSaved()[currentUser]||[];
+  if(!saved.length){document.getElementById('hoursHistoric').innerHTML='<div style="color:var(--muted);font-size:13px;padding:8px;">Sin datos históricos</div>';return;}
+  let totalWorked=0,totalContract=0;
+  saved.forEach(w=>{const s=calcWeekStats(w,contractH,breakPrefs);totalWorked+=s.totalWorked;totalContract+=s.adjustedContract;});
+  const totalComp=totalWorked-totalContract;
+  const compCls=totalComp>0?'positive':totalComp<0?'negative':'neutral';
+  document.getElementById('hoursHistoric').innerHTML=`<div class="hours-historic-card">
+    <div class="hours-historic-row"><span class="hours-historic-label">Total horas trabajadas</span><span class="hours-historic-val" style="color:var(--text);">${totalWorked.toFixed(1)}h</span></div>
+    <div class="hours-historic-row"><span class="hours-historic-label">Total horas de contrato</span><span class="hours-historic-val" style="color:var(--muted);">${totalContract.toFixed(1)}h</span></div>
+    <div class="hours-historic-row"><span class="hours-historic-label">Semanas analizadas</span><span class="hours-historic-val" style="color:var(--muted);">${saved.length}</span></div>
+    <div class="hours-historic-row" style="border-top:2px solid var(--border);margin-top:4px;padding-top:12px;">
+      <span class="hours-historic-label" style="font-weight:700;color:var(--text);">Total complementarias</span>
+      <span class="hours-historic-val ${compCls}" style="font-size:20px;">${totalComp>=0?'+':''}${totalComp.toFixed(1)}h</span>
+    </div>
+  </div>`;
+}
+
+if(page==='hours') renderHoursPage();
 init();
 </script>
+
+<!-- HORAS -->
+<div class="page" id="page-hours">
+  <div class="container">
+    <div class="section-label">📊 Mis Horas</div>
+
+    <!-- Contract config -->
+    <div class="hours-config-card" id="hoursConfigCard">
+      <div class="hours-config-title">⚙️ Tu contrato</div>
+      <div class="hours-config-row">
+        <span class="hours-config-label">Horas semanales</span>
+        <div class="hours-config-input-wrap">
+          <input type="number" id="contractHours" min="1" max="40" step="0.5" class="hours-field" placeholder="15">
+          <span class="hours-config-unit">h/semana</span>
+        </div>
+      </div>
+      <button class="btn btn-save" id="saveContractBtn">💾 Guardar contrato</button>
+    </div>
+
+    <!-- Week selector -->
+    <div class="section-label">Semana</div>
+    <select class="week-selector" id="hoursWeekSelector"></select>
+
+    <!-- Week breakdown -->
+    <div id="hoursWeekBreakdown"></div>
+
+    <!-- Month summary -->
+    <div class="section-label">Resumen del mes</div>
+    <div id="hoursMonthSummary"></div>
+
+    <!-- Historic -->
+    <div class="section-label">Histórico total</div>
+    <div id="hoursHistoric"></div>
+  </div>
+</div>
 </body>
 </html>

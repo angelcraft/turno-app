@@ -1,0 +1,13 @@
+.gradle/
+.gradle-user-home/
+local.properties
+.tmp-*/
+
+build/
+app/build/
+
+*.iml
+.idea/
+
+checkout-smoke-*.png
+checkout-smoke-report.json

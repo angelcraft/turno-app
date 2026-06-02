@@ -1001,7 +1001,6 @@ document.getElementById('saveKeyBtn').addEventListener('click',()=>{
   if(!k||!k.startsWith('AIza')){ document.getElementById('apikeyInput').style.borderColor='#f04d6e'; return; }
   localStorage.setItem('gemini_api_key',k); haptic('success'); init();
 });
-document.getElementById('settingsBtn').addEventListener('click',()=>{ document.getElementById('apikeyInput').value=localStorage.getItem('gemini_api_key')||''; navTo('apikey'); });
 
 // ══ USER SELECT ══
 function renderUserSelect(){

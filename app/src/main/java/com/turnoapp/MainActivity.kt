@@ -2,14 +2,13 @@ package com.turnoapp
 
 import android.Manifest
 import android.app.Activity
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.Environment
 import android.provider.MediaStore
-import android.util.Base64
 import android.webkit.*
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,7 +16,6 @@ import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import java.io.File
-import java.io.FileOutputStream
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -29,7 +27,6 @@ class MainActivity : AppCompatActivity() {
 
     companion object {
         private const val FILE_CHOOSER_REQUEST = 1
-        private const val CAMERA_REQUEST = 2
         private const val PERMISSION_REQUEST = 3
     }
 
@@ -91,42 +88,58 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun requestImagePicker() {
-        val permissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            arrayOf(Manifest.permission.READ_MEDIA_IMAGES, Manifest.permission.CAMERA)
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            openImagePicker(includeCamera = true)
         } else {
-            arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.CAMERA)
-        }
-
-        val notGranted = permissions.filter {
-            ContextCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
-        }
-
-        if (notGranted.isEmpty()) {
-            openImagePicker()
-        } else {
-            ActivityCompat.requestPermissions(this, notGranted.toTypedArray(), PERMISSION_REQUEST)
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.CAMERA), PERMISSION_REQUEST)
         }
     }
 
-    private fun openImagePicker() {
-        // Gallery intent
-        val galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
-        galleryIntent.type = "image/*"
+    private fun openImagePicker(includeCamera: Boolean) {
+        cameraImageUri = null
 
-        // Camera intent
-        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
-        val photoFile = createImageFile()
-        cameraImageUri = FileProvider.getUriForFile(this, "${packageName}.provider", photoFile)
-        cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraImageUri)
+        val galleryIntent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            addCategory(Intent.CATEGORY_OPENABLE)
+            type = "image/*"
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
 
         val chooser = Intent.createChooser(galleryIntent, "Selecciona imagen")
-        chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(cameraIntent))
-        startActivityForResult(chooser, FILE_CHOOSER_REQUEST)
+        if (includeCamera) {
+            buildCameraIntent()?.let {
+                chooser.putExtra(Intent.EXTRA_INITIAL_INTENTS, arrayOf(it))
+            }
+        }
+
+        try {
+            startActivityForResult(chooser, FILE_CHOOSER_REQUEST)
+        } catch (e: ActivityNotFoundException) {
+            fileUploadCallback?.onReceiveValue(null)
+            fileUploadCallback = null
+            Toast.makeText(this, "No hay ninguna app para seleccionar imágenes", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun buildCameraIntent(): Intent? {
+        val cameraIntent = Intent(MediaStore.ACTION_IMAGE_CAPTURE)
+        if (cameraIntent.resolveActivity(packageManager) == null) return null
+
+        return try {
+            val photoFile = createImageFile()
+            cameraImageUri = FileProvider.getUriForFile(this, "${packageName}.provider", photoFile)
+            cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, cameraImageUri)
+            cameraIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
+            cameraIntent
+        } catch (e: Exception) {
+            cameraImageUri = null
+            null
+        }
     }
 
     private fun createImageFile(): File {
         val timeStamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.getDefault()).format(Date())
         val storageDir = getExternalFilesDir(Environment.DIRECTORY_PICTURES)
+            ?: throw IllegalStateException("Pictures directory is not available")
         return File.createTempFile("TURNO_${timeStamp}_", ".jpg", storageDir)
     }
 
@@ -151,7 +164,8 @@ class MainActivity : AppCompatActivity() {
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == PERMISSION_REQUEST) {
-            openImagePicker()
+            val cameraGranted = grantResults.firstOrNull() == PackageManager.PERMISSION_GRANTED
+            openImagePicker(includeCamera = cameraGranted)
         }
     }
 
